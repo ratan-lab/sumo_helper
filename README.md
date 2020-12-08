@@ -8,3 +8,10 @@ The following scripts are included in the scripts folder
 ```
 plot_metrics.R /Users/ar7jq/benchmark_analysis output.pdf
 ```
+
+2. plot_sankey.R : This plot is helpful in inspecting how the cluster memberships change as the number of clusters are changed. Run it as 
+
+```
+./plot_sankey.R /Users/ar7jq/benchmark_analysis output.pdf
+```
+

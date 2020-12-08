@@ -14,7 +14,7 @@ get_metrics <- function(x) {
     f <- np$load(x$filename2)
     pac <- f$f[["pac"]]
     ccc <- f$f[["cophenet"]]
-    return(tibble(pac = pac, ccc = ccc))
+    return(tibble(PAC = pac, CCC = ccc))
 }
 
 df <- list.files(basedir, "sumo_results.npz", recursive=T) %>%
@@ -53,9 +53,9 @@ df %>%
         geom_line() + 
         geom_point() + 
         geom_hline(yintercept=0.1, color="grey") + 
-        geom_hline(yintercept=0.9, color="grey") + 
+        geom_hline(yintercept=0.95, color="grey") + 
         facet_wrap(name~.) + 
         theme_bw() +
         xlab("Number of clusters") + 
-        ylab("PAC")
+        ylab("metric")
 dev.off()
