@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+
+from sys import stdout, maxsize, stderr
+from argparse import ArgumentParser
+import numpy as np
+import pandas as pd
+from sklearn.metrics.cluster import adjusted_mutual_info_score 
+ 
+from nmf import symnmf_admm
+  
+if __name__ == "__main__":
+    parser = ArgumentParser()   
+    parser.add_argument("prepared_npz", 
+                        help="The npz output from 'sumo prepare'")
+    parser.add_argument("layer_indx",
+                        help="The index of the layer to be investigated")
+    parser.add_argument("num_clusters",
+                        help="The number of clusters requested")
+
+    args = parser.parse_args()
+    
+    with np.load(args.prepared_npz) as data:
+        num_files = len(data.files)
+        num_layers = (num_files - 1)/2
+        assert (num_files - 1) % 2 == 0
+        num_layers = int(num_layers)
+        assert (num_layers >= int(args.layer_indx))
+        sample_names = data["samples"]
+
+        A = data[str(args.layer_indx)]
+        W, sf = symnmf_admm(A, int(args.num_clusters))
+        ix = 0
+        for j in range(A.shape[0]):
+            if sf[j] == True:
+                print("%s\t%s\t%s" % (sample_names[j], str(np.argmax(W[ix])), "\t".join([str(x) for x in W[ix]])))   
+                ix += 1
+            else:
+                print("%s\tNA\t%s" % (sample_names[j], "\t".join(["NA"]*int(args.num_clusters))))   
+

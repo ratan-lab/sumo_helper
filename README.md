@@ -15,3 +15,17 @@ plot_metrics.R /Users/ar7jq/benchmark_analysis output.pdf
 ./plot_sankey.R /Users/ar7jq/benchmark_analysis output.pdf
 ```
 
+3. cluster_layer: Cluster the samples in a particular data type using Symmetric NMF.
+
+```
+./cluster_layer prepared.npz 0 2
+```
+
+Here "0" is the label for the layer, and you would like to see how the clustering performs with k=2.
+
+4. examine_layers: Cluster each layer separately using Symmetric NMF from k=2:15. Also calculates adjusted NMI for these various clusterings.
+
+```
+./examine_layers -c clusters.txt prepare.npz
+```
+

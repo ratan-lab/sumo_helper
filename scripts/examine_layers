@@ -1,0 +1,78 @@
+#!/usr/bin/env python
+
+from sys import stdout, maxsize, stderr
+from argparse import ArgumentParser
+import numpy as np
+import pandas as pd
+import logging 
+from sklearn.metrics.cluster import adjusted_mutual_info_score 
+
+from nmf import symnmf_admm
+   
+def cluster_each_layer(input_npz):
+    layer_clusters = []
+    sample_names = None
+    separation_names = []
+
+    with np.load(input_npz) as data:
+        num_files = len(data.files)
+        num_layers = (num_files - 1)/2
+        assert (num_files - 1) % 2 == 0
+        num_layers = int(num_layers)
+        sample_names = data["samples"]
+
+        for i in range(0, num_layers):
+            A = data[str(i)]
+            for k in range(2,15):
+                W, sf = symnmf_admm(A, k)
+                labels = []
+                ix = 0
+                for j in range(A.shape[0]):
+                    if sf[j] == True:
+                        labels.append(str(np.argmax(W[ix])))   
+                        ix += 1
+                    else:
+                        labels.append(np.nan)
+                assert len(labels) == A.shape[0]
+                layer_clusters.append(labels)
+                separation_names.append("%d_%d" % (i, k))
+
+    layer_clusters = pd.DataFrame(layer_clusters, columns=sample_names,
+                                  index=separation_names)
+    return layer_clusters
+
+if __name__ == "__main__":
+    parser = ArgumentParser()   
+    parser.add_argument("prepared_npz", 
+                        help="The npz output from 'sumo prepare'")
+    parser.add_argument("-c", "--clusters", dest="clusters",
+                        help="Print the clusters from each layer to this file")
+    args = parser.parse_args()
+    
+
+    # find the cluster for each sample when only data in one layer is considered
+    layer_clusters = cluster_each_layer(args.prepared_npz)
+    # write down this clustering if the user wants it
+    if args.clusters:
+        layer_clusters.to_csv(args.clusters, sep='\t')
+
+    # calculate the normalized mutual information for each pair of layers
+    solutions = layer_clusters.index.tolist()
+    nmi = []
+    for i,a in enumerate(solutions):
+        for b in solutions[i+1:]:
+            l1,k1 = a.split("_")
+            l2,k2 = b.split("_")
+            if l1 == l2: continue
+            
+            clust1 = layer_clusters.loc[a]
+            clust2 = layer_clusters.loc[b]
+            idx = ~clust1.isna() & ~clust2.isna()
+
+            _nmi = adjusted_mutual_info_score(clust1[idx],
+                                              clust2[idx])
+            nmi.append([a,b,_nmi.round(3)])
+
+    nmi = pd.DataFrame(nmi, columns=['solution1', 'solution2', 'NMI'])
+    nmi.sort_values(by=['NMI']).to_csv(stdout, sep='\t')
+
