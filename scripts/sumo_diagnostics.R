@@ -30,7 +30,12 @@ run_diagnostics <- function(dir_name){
     npz <- np$load(fname, allow_pickle = TRUE)
     config <- npz$f[['config']]
     max_iter <- c(max_iter, unlist(config[,2][config[,1] == "max_iter"]) %>% as.numeric())
-    selected_eta <- unlist(config[,2][config[,1] == "sparsity"]) %>% as.numeric()
+    selected_eta <- unlist(config[,2][config[,1] == "sparsity"]) 
+    
+    if (!file.exists(file.path(dir_name, k_dir, paste0("eta_",selected_eta, ".log")))){
+      selected_eta <- paste0(selected_eta, ".0")
+    }
+    
     debug_flag <- any(grepl("cost", npz$files))
     
     k_metrics <- tibble(pac=npz$f[['pac']], ccc=npz$f[['cophenet']], k=k)
@@ -184,6 +189,3 @@ if (length(args) <= 0){
     run_diagnostics(dir_name=result_dir)
   } 
 }
-
-# args <- c("miter1000_tol1e-09", "miter10000_tol1e-09", "miter15000_tol1e-08", "miter15000_tol1e-09",  
-#   "miter15000_tol1e-10", "miter500_tol1e-08", "miter500_tol1e-09", "miter500_tol1e-10", "miter5000_tol1e-09" )
