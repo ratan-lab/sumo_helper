@@ -15,7 +15,7 @@ load_packages <- function(){
 
 run_diagnostics <- function(dir_name){
   stopifnot(dir.exists(dir_name))
-  outname <- paste0("sumo_diagnostics.", dir_name, ".pdf")
+  outname <- file.path(dirname(dir_name), paste0("sumo_diagnostics.", basename(dir_name), ".pdf"))
   k_dirs <- list.files(dir_name)[grepl('^k',list.files(dir_name))]
   np <- import("numpy")
   quality_metrics <- NULL
