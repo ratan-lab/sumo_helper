@@ -29,3 +29,10 @@ Here "0" is the label for the layer, and you would like to see how the clusterin
 ./examine_layers -c clusters.txt prepare.npz
 ```
 
+5. Create plot summary of SUMO run results, based on various metrics extracted from the output directory (only for SUMO v0.2.7+).
+
+```
+./sumo_diagnostics.R sumo_results_dir1,sumo_results_dir2,...
+```
+Created plots illustrate metrics used for K-selection, cost function distribution throughout the factorization, number of iterations reached by solver in each factorization repetition, and heatmaps of consensus matrices.
+If -log DEBUG flag was used for SUMO run, additional plots of final cost function values (separated by terms) and heatmaps of selected final H matrices are created.
