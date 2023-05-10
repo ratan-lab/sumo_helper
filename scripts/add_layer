@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+
+from sys import stdout, maxsize, stderr
+from argparse import ArgumentParser
+import numpy as np
+import pandas as pd
+from sklearn.metrics.cluster import adjusted_mutual_info_score 
+ 
+from nmf import symnmf_admm
+  
+if __name__ == "__main__":
+    parser = ArgumentParser()   
+    parser.add_argument("feature",
+                        help="The feature matrix for the new layer")
+    parser.add_argument("adjacency",
+                        help="The adjacency matrix for the new layer")
+    parser.add_argument("prepared_npz", 
+                        help="The npz output from 'sumo prepare'")
+    parser.add_argument("output_npz", 
+                        help="The npz output with the new layer")
+
+    args = parser.parse_args()
+    
+    with np.load(args.prepared_npz) as data:
+        num_files = len(data.files)
+        num_layers = (num_files - 1)/2
+        assert (num_files - 1) % 2 == 0
+        num_layers = int(num_layers)
+
+        sample_names = data["samples"]
+        newdata = dict(data)
+
+        # read in the new adjacency matrix
+        f = np.loadtxt(args.feature)
+        assert f.shape[0] == len(sample_names)
+
+        # add it to the new file
+        newdata["f"+str(num_layers)] = f
+
+        # read in the new feature matrix
+        a = np.loadtxt(args.adjacency)
+        assert a.shape[0] == len(sample_names)
+        assert a.shape[1] == len(sample_names)
+
+        # add it to the new file
+        newdata[str(num_layers)] = a
+
+        # write the new file
+        np.savez(args.output_npz,**newdata)
